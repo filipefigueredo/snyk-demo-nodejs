@@ -11,4 +11,4 @@ jobs:
     with:
       language-tooling: 'nodejs'
       node-version: 'lts/gallium'
-      target-directory: './src'
+      target-directory: '.'
