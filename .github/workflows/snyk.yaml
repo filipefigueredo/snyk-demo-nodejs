@@ -80,10 +80,10 @@ jobs:
         run: snyk test --all-projects --sarif-file-output=snyk.sarif
         continue-on-error: true # To make sure that SARIF upload gets called
       
-      # - name: Upload result to GitHub Code Scanning
-      #   uses: github/codeql-action/upload-sarif@v1
-      #   with:
-      #     sarif_file: snyk.sarif
+      - name: Upload result to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v1
+        with:
+          sarif_file: snyk.sarif
 
   nodejs-scan:
     name: Scan NodeJS project(s)
@@ -178,7 +178,7 @@ jobs:
         run: docker image build -t ${{ steps.lowercase.outputs.parsed_image_name }} .
 
       - name: Run Snyk test for containers
-        run: snyk test --file=Dockerfile --sarif-file-output=snyk.sarif --docker ${{ steps.lowercase.outputs.parsed_image_name }} 
+        run: snyk container test ${{ steps.lowercase.outputs.parsed_image_name }} --app-vulns --file=Dockerfile --sarif-file-output=snyk.sarif 
         continue-on-error: true # To make sure that SARIF upload gets called
 
       # Uploads SARIF file to see the result of tfsec in github repository
