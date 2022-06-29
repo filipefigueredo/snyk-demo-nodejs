@@ -33,12 +33,6 @@ WORKDIR /opt/node_app
 # Copy the entire codebase
 COPY . .
 
-# The official node image provides an unprivileged user as a security best practice
-# but we have to manually enable it. We put it here so npm installs dependencies as the same
-# user who runs the app.
-# https://github.com/nodejs/docker-node/blob/master/docs/BestPractices.md#non-root-user
-USER node
-
 # Run npm command to install npm v8 latest stable version.
 RUN npm install -g npm@8
 

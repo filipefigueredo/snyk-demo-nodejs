@@ -59,7 +59,7 @@ export class GlobalCommandService {
     const repositories: string[] = request.map((repository) => repository.name);
 
     if (!repositories.find((repository) => repository === commandArguments[1])) {
-      message = `Sorry but there is no repository '${commandArguments[1]}' available to be destroyed in the organization.`);
+      message = `Sorry but there is no repository '${commandArguments[1]}' available to be destroyed in the organization.`;
       
     } else {
       const deleteWorkflowPayload = {
@@ -72,6 +72,7 @@ export class GlobalCommandService {
       await githubActionRequest(this.deleteWorkflowUrl, deleteWorkflowPayload);
       message = `Ok, ${username}, I'll destroy 🗑️ your repository '${commandArguments[1]}'.`;
     }
+    return message;
   }
 
 

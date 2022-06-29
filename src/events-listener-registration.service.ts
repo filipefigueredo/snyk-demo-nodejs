@@ -1,5 +1,4 @@
 import { App } from '@slack/bolt';
-import { WordleEventListenerService } from './games/wordle-game/wordle-event-listener.service';
 import { Command } from './github/enums/command.enum';
 import { getConfig } from './common/configurations/config';
 import { GlobalCommandService } from './github/global-command.service';
@@ -7,11 +6,10 @@ import { GlobalCommandService } from './github/global-command.service';
 export class EventsListenerRegistrationService {
   private slashCommandPattern: string;
   private readonly globalCommandService: GlobalCommandService;
-  private readonly wordleEventListenerService: WordleEventListenerService;
+
 
   constructor(private readonly app: App) {
     this.globalCommandService = new GlobalCommandService();
-    this.wordleEventListenerService = new WordleEventListenerService();
     this.slashCommandPattern = getConfig(`app.slashCommandPattern`);
   }
 
@@ -36,7 +34,7 @@ export class EventsListenerRegistrationService {
           break;
 
         default:
-          await say(this.globalCommandService.invalidCommand(payload.text));
+          //await say(this.globalCommandService.invalidCommand(payload.text));
           break;
       }
     });

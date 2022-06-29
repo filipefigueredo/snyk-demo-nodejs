@@ -5,7 +5,6 @@ import { EventsListenerRegistrationService } from './events-listener-registratio
 import { routes } from './api-routes';
 import { Package } from './common/configurations/pacakge';
 import { Logger } from './common/logger/logger';
-import { WordleEventListenerService } from './games/wordle-game/wordle-event-listener.service';
 
 async function bootstrap(): Promise<void> {
   // If no environment is defined, sets environment to "local"
