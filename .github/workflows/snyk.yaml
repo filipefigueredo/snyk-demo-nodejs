@@ -1,0 +1,189 @@
+name: Snyk Scan
+
+on:
+  workflow_call:
+    inputs:
+      # valid options: dotnet, golang, nodejs and docker
+      language-tooling:
+        description: "Programming language or building tool used"
+        required: false
+        type: string
+        default: dotnet
+      csproj-files:
+        description: "Target csproj files"
+        required: false
+        type: string
+        default: "**/*.csproj"
+      dotnet-version:
+        description: .NET SDK version
+        required: false
+        type: string
+        default: 3.1.x
+      go-version:
+        description: go version
+        required: false
+        type: string
+        default: '1.18'
+      node-version:
+        description: NodeJS version
+        required: false
+        type: string
+        default: lts/gallium
+      target-directory:
+        description: "Target working directory"
+        required: false
+        type: string
+        default: "."
+
+jobs:
+  dotnet-scan:
+    name: Scan .Net project(s)
+    if: ${{ inputs.language-tooling == 'dotnet'}}
+    runs-on:
+      - self-hosted
+      - linux
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
+      DOTNET_VERSION: ${{ inputs.dotnet-version }}
+      DOTNET_NOLOGO: true # Removes logo and telemetry message from first run of dotnet cli.
+      DOTNET_CLI_TELEMETRY_OPTOUT: true # Opt-out of telemetry being sent to Microsoft.
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.target-directory }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup / Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Setup .NET environment
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore .NET dependencies
+        run: |
+          shopt -s nullglob
+          shopt -s globstar
+
+          files=(${{ inputs.csproj-files }})
+
+          for file in ${files[@]}; do
+              dotnet restore $file
+          done
+
+      - name: Run Snyk test
+        run: snyk test --all-projects --sarif-file-output=snyk.sarif
+        continue-on-error: true # To make sure that SARIF upload gets called
+      
+      # - name: Upload result to GitHub Code Scanning
+      #   uses: github/codeql-action/upload-sarif@v1
+      #   with:
+      #     sarif_file: snyk.sarif
+
+  nodejs-scan:
+    name: Scan NodeJS project(s)
+    if: ${{ inputs.language-tooling == 'nodejs'}}
+    runs-on:
+      - self-hosted
+      - linux
+    env:
+      NODE_VERSION: ${{ inputs.node-version }}
+      SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.target-directory }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup / Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Setup NodeJS environment
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Run Snyk test
+        run: snyk test --all-projects --sarif-file-output=snyk.sarif
+        continue-on-error: true # To make sure that SARIF upload gets called
+
+  golang-scan:
+    name: Scan Golang project(s)
+    if: ${{ inputs.language-tooling == 'golang'}}
+    runs-on:
+      - self-hosted
+      - linux
+    env:
+      GO_VERSION: ${{ inputs.go-version }}
+      SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.target-directory }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup / Install Snyk CLI
+        uses: snyk/actions/setup@master
+
+      - name: Setup NodeJS environment
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Run Snyk test
+        run: snyk test --all-projects --sarif-file-output=snyk.sarif
+        continue-on-error: true # To make sure that SARIF upload gets called
+
+  docker-scan:
+    name: Scan Docker images
+    if: ${{ inputs.language-tooling == 'docker'}}
+    runs-on:
+      - self-hosted
+      - linux
+    env:
+      SNYK_TOKEN: ${{ secrets.SNYK_API_TOKEN }}
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ inputs.target-directory }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Setup / Install Snyk CLI
+        uses: snyk/actions/setup@master
+      
+      - name: Parse container image name
+        id: lowercase
+        run: |
+          parsed_string=$(echo "${{github.repository_owner}}/${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          echo "::set-output name=parsed_image_name::$parsed_string"
+
+      - name: Build a Docker image
+        run: docker image build -t ${{ steps.lowercase.outputs.parsed_image_name }} .
+
+      - name: Run Snyk test for containers
+        run: snyk test --file=Dockerfile --sarif-file-output=snyk.sarif --docker ${{ steps.lowercase.outputs.parsed_image_name }} 
+        continue-on-error: true # To make sure that SARIF upload gets called
+
+      # Uploads SARIF file to see the result of tfsec in github repository
+      # - name: Upload result to GitHub Code Scanning
+      #   uses: github/codeql-action/upload-sarif@v1
+      #   with:
+      #     image: ${{ env.REGISTRY_NAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+      #     sarif_file: snyk.sarif

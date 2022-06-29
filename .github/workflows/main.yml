@@ -1,0 +1,14 @@
+name: Snyk Demo
+
+on:
+  workflow_dispatch:
+
+jobs:
+  snyk-scan-dotnet:
+    name: Snyk Scan
+    uses: ./.github/workflows/snyk.yaml
+    secrets: inherit
+    with:
+      language-tooling: 'nodejs'
+      node-version: 'lts/gallium'
+      target-directory: './src'
