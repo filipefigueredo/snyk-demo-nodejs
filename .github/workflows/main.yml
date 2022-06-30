@@ -6,15 +6,14 @@ on:
 jobs:
   snyk-scan-nodejs:
     name: Snyk Scan
-    uses: ./.github/workflows/snyk.yaml
+    uses: ./.github/workflows/snyk-scan-nodejs.yaml
     secrets: inherit
     with:
-      language-tooling: 'nodejs'
       node-version: 'lts/gallium'
 
-  snyk-scan-docker:
-    name: Snyk Scan - Docker
-    uses: ./.github/workflows/snyk.yaml
-    secrets: inherit
-    with:
-      language-tooling: 'docker'
+  # snyk-scan-docker:
+  #   name: Snyk Scan - Docker
+  #   uses: ./.github/workflows/snyk-scan-nodejs.yaml.yaml
+  #   secrets: inherit
+  #   with:
+  #     language-tooling: 'docker'
