@@ -9,7 +9,7 @@ jobs:
     uses: ./.github/workflows/snyk-scan-nodejs.yaml
     secrets: inherit
     with:
-      node-version: 'lts/gallium'
+      nodejs-version: 'lts/gallium'
 
   # snyk-scan-docker:
   #   name: Snyk Scan - Docker
